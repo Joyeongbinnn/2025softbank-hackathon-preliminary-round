@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'export', // SPA 정적 출력
-  //distDir: './dist', // 빌드 출력 디렉터리 ./dist 로 변경
+  // SSR 방식 (기본값)
+  // output: 'export' 를 제거하면 SSR 활성화
 }
 
 export default nextConfig

@@ -3,7 +3,10 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
-  title: 'yoitang - 스타트업을 위한 자동 배포 플랫폼',
+  title: 'yoitang - 원클릭 자동 배포 플랫폼',
+  icons: {
+    icon: '/favicon.ico',        // 브라우저 탭 아이콘
+  },
   description:
     'Git 주소와 AWS 정보만 넣으면, EC2·Docker·NGINX·HTTPS까지 자동 구성해주는 스타트업 전용 배포 서비스',
   openGraph: {
