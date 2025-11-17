@@ -9,26 +9,13 @@ export const metadata: Metadata = {
     title: 'yoitang - 스타트업을 위한 자동 배포 플랫폼',
     description: '배포 버튼 한 번으로, 인프라까지 자동으로',
     type: 'website',
-    images: ['https://lovable.dev/opengraph-image-p98pqg.png'],
+    // 절대 URL로 지정
+    images: ['https://www.yoitang.cloud/og-yoitang.png'],
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@Lovable',
-    images: ['https://lovable.dev/opengraph-image-p98pqg.png'],
+    // 더 이상 Lovable 계정 아니니까 빼거나 네 걸로 교체
+    // site: '@Lovable',
+    images: ['https://www.yoitang.cloud/og-yoitang.png'],
   },
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="ko">
-      <body>
-        {/* 기존 index.html 의 <div id="root"></div> 역할 */}
-        <div id="root">{children}</div>
-      </body>
-    </html>
-  )
 }
