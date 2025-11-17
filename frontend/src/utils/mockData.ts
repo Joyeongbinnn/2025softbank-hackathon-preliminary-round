@@ -125,7 +125,7 @@ export const mockPipelineStages: PipelineStage[] = [
   },
   {
     id: '4',
-    name: '인프라 적용 (Terraform)',
+    name: '인프라 적용 (boto3)',
     status: 'running',
     duration: '1분 12초',
   },
@@ -155,8 +155,8 @@ export const mockLogs = `[2024-01-15 10:32:15] Starting deployment process...
 [2024-01-15 10:34:52] ✓ Docker image built successfully
 [2024-01-15 10:34:53] Pushing image to ECR...
 [2024-01-15 10:35:38] ✓ Image pushed to ECR
-[2024-01-15 10:35:39] Applying Terraform configuration...
-[2024-01-15 10:36:20] Creating EC2 instances...
+[2024-01-15 10:35:39] Applying boto3 configuration...
+[2024-01-15 10:36:20] Creating EC2 instances using boto3...
 [2024-01-15 10:36:51] ✓ Infrastructure applied successfully`;
 
 export const techStackOptions = [

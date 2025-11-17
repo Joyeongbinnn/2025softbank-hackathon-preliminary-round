@@ -3,6 +3,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { GitBranch, Code2 } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
+import { t } from "@/lib/i18n";
 
 interface Step2Props {
   gitUrl: string;
@@ -21,10 +23,12 @@ const Step2GitSetup = ({
   onBranchChange,
   onAccessTokenChange,
 }: Step2Props) => {
+  const { language } = useLanguage();
+  
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="space-y-2">
-        <Label htmlFor="gitUrl">GitHub 레포지토리 URL *</Label>
+        <Label htmlFor="gitUrl">{t(language, 'gitRepository')} *</Label>
         <Input
           id="gitUrl"
           placeholder="https://github.com/username/repository"
@@ -35,16 +39,16 @@ const Step2GitSetup = ({
       </div>
       
       <div className="space-y-2">
-        <Label htmlFor="branch">배포 브랜치 *</Label>
+        <Label htmlFor="branch">{language === 'ko' ? '배포 브랜치' : language === 'en' ? 'Deploy Branch' : 'デプロイブランチ'} *</Label>
         <Select value={branch} onValueChange={onBranchChange}>
           <SelectTrigger>
-            <SelectValue placeholder="브랜치 선택" />
+            <SelectValue placeholder={language === 'ko' ? '브랜치 선택' : language === 'en' ? 'Select branch' : 'ブランチを選択'} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="main">main</SelectItem>
             <SelectItem value="develop">develop</SelectItem>
             <SelectItem value="staging">staging</SelectItem>
-            <SelectItem value="custom">직접 입력</SelectItem>
+            <SelectItem value="custom">{language === 'ko' ? '직접 입력' : language === 'en' ? 'Custom' : 'カスタム'}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -60,7 +64,7 @@ const Step2GitSetup = ({
           className="text-base"
         />
         <p className="text-xs text-muted-foreground">
-          💡 데모에서는 실제로 저장되지 않습니다
+          💡 {language === 'ko' ? '데모에서는 실제로 저장되지 않습니다' : language === 'en' ? 'Not actually saved in the demo' : 'デモでは実際には保存されません'}
         </p>
       </div>
       
@@ -72,13 +76,13 @@ const Step2GitSetup = ({
                 <Code2 className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1">
-                <h4 className="font-semibold mb-1">레포지토리 미리보기</h4>
+                <h4 className="font-semibold mb-1">{language === 'ko' ? '레포지토리 미리보기' : language === 'en' ? 'Repository Preview' : 'リポジトリプレビュー'}</h4>
                 <p className="text-sm text-muted-foreground mb-2">
                   {gitUrl.split('/').slice(-2).join('/')}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <GitBranch className="h-3 w-3" />
-                  <span>마지막 커밋: feat: 로그인 UI 개선 (2시간 전)</span>
+                  <span>{language === 'ko' ? '마지막 커밋: feat: 로그인 UI 개선 (2시간 전)' : language === 'en' ? 'Last commit: feat: improve login UI (2 hours ago)' : '最後のコミット: feat: ログインUI改善 (2時間前)'}</span>
                 </div>
               </div>
             </div>

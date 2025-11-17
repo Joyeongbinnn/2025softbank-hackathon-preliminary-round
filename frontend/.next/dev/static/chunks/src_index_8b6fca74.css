@@ -884,6 +884,10 @@ body {
   width: 1rem;
 }
 
+.w-40 {
+  width: 10rem;
+}
+
 .w-5 {
   width: 1.25rem;
 }
@@ -926,6 +930,10 @@ body {
 
 .w-auto {
   width: auto;
+}
+
+.w-fit {
+  width: fit-content;
 }
 
 .w-full {
@@ -1287,6 +1295,10 @@ body {
   white-space: nowrap;
 }
 
+.whitespace-pre-line {
+  white-space: pre-line;
+}
+
 .break-words {
   overflow-wrap: break-word;
 }
@@ -1551,6 +1563,10 @@ body {
 
 .bg-warning\/5 {
   background-color: hsl(var(--warning) / .05);
+}
+
+.bg-success\/5 {
+  background-color: hsl(var(--success) / .05);
 }
 
 .bg-gradient-to-b {

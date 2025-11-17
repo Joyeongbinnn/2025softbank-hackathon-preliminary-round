@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import { awsRegions } from "@/utils/mockData";
 import { GitBranch, Server, Database, Globe } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
+import { t } from "@/lib/i18n";
 
 interface Step3Props {
   awsRegion: string;
@@ -28,14 +30,16 @@ const Step3AWSSetup = ({
   onDbOptionChange,
   onDomainChange,
 }: Step3Props) => {
+  const { language } = useLanguage();
+  
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <div className="space-y-6 animate-fade-in">
         <div className="space-y-2">
-          <Label htmlFor="region">AWS 리전 *</Label>
+          <Label htmlFor="region">{t(language, 'awsRegion')} *</Label>
           <Select value={awsRegion} onValueChange={onAwsRegionChange}>
             <SelectTrigger>
-              <SelectValue placeholder="리전 선택" />
+              <SelectValue placeholder={language === 'ko' ? '리전 선택' : language === 'en' ? 'Select region' : 'リージョンを選択'} />
             </SelectTrigger>
             <SelectContent>
               {awsRegions.map((region) => (
@@ -48,7 +52,7 @@ const Step3AWSSetup = ({
         </div>
         
         <div className="space-y-2">
-          <Label>EC2 인스턴스 개수 *</Label>
+          <Label>{language === 'ko' ? 'EC2 인스턴스 개수' : language === 'en' ? 'Number of EC2 Instances' : 'EC2インスタンス数'} *</Label>
           <div className="flex items-center gap-4">
             <Slider
               value={[ec2Count]}
@@ -59,31 +63,31 @@ const Step3AWSSetup = ({
               className="flex-1"
             />
             <span className="w-12 text-center font-semibold text-primary">
-              {ec2Count}대
+              {ec2Count}{language === 'ko' ? '대' : language === 'en' ? '' : ''}
             </span>
           </div>
         </div>
         
         <div className="space-y-2">
-          <Label>데이터베이스 옵션</Label>
+          <Label>{language === 'ko' ? '데이터베이스 옵션' : language === 'en' ? 'Database Option' : 'データベースオプション'}</Label>
           <RadioGroup value={dbOption} onValueChange={onDbOptionChange}>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="rds" id="rds" />
               <Label htmlFor="rds" className="cursor-pointer font-normal">
-                RDS로 자동 구성
+                {language === 'ko' ? 'RDS로 자동 구성' : language === 'en' ? 'Auto-configure with RDS' : 'RDSで自動構成'}
               </Label>
             </div>
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="manual" id="manual" />
               <Label htmlFor="manual" className="cursor-pointer font-normal">
-                직접 관리할게요
+                {language === 'ko' ? '직접 관리할게요' : language === 'en' ? 'I will manage it myself' : '自分で管理します'}
               </Label>
             </div>
           </RadioGroup>
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="domain">도메인 이름</Label>
+          <Label htmlFor="domain">{language === 'ko' ? '도메인 이름' : language === 'en' ? 'Domain Name' : 'ドメイン名'}</Label>
           <Input
             id="domain"
             placeholder="www.yoitang.cloud"
@@ -98,7 +102,7 @@ const Step3AWSSetup = ({
         <CardContent className="p-6">
           <h4 className="font-semibold mb-4 flex items-center gap-2">
             <Server className="h-5 w-5 text-primary" />
-            예상 아키텍처 미리보기
+            {language === 'ko' ? '예상 아키텍처 미리보기' : language === 'en' ? 'Expected Architecture Preview' : '予想されるアーキテクチャプレビュー'}
           </h4>
           
           <div className="space-y-4">
@@ -106,7 +110,7 @@ const Step3AWSSetup = ({
               <GitBranch className="h-5 w-5 text-primary" />
               <div className="flex-1">
                 <p className="font-medium text-sm">GitHub</p>
-                <p className="text-xs text-muted-foreground">소스 코드</p>
+                <p className="text-xs text-muted-foreground">{language === 'ko' ? '소스 코드' : language === 'en' ? 'Source Code' : 'ソースコード'}</p>
               </div>
             </div>
             
@@ -120,7 +124,7 @@ const Step3AWSSetup = ({
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">CI/CD Pipeline</p>
-                <p className="text-xs text-muted-foreground">자동 빌드 & 배포</p>
+                <p className="text-xs text-muted-foreground">{language === 'ko' ? '자동 빌드 & 배포' : language === 'en' ? 'Automated Build & Deploy' : '自動ビルド & デプロイ'}</p>
               </div>
             </div>
             
@@ -134,7 +138,7 @@ const Step3AWSSetup = ({
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">EC2 × {ec2Count}</p>
-                <p className="text-xs text-muted-foreground">{awsRegions.find(r => r.value === awsRegion)?.label || '리전 선택'}</p>
+                <p className="text-xs text-muted-foreground">{awsRegions.find(r => r.value === awsRegion)?.label || (language === 'ko' ? '리전 선택' : language === 'en' ? 'Select region' : 'リージョンを選択')}</p>
               </div>
             </div>
             
@@ -148,7 +152,7 @@ const Step3AWSSetup = ({
                   <Database className="h-5 w-5 text-primary" />
                   <div className="flex-1">
                     <p className="font-medium text-sm">RDS Database</p>
-                    <p className="text-xs text-muted-foreground">관리형 데이터베이스</p>
+                    <p className="text-xs text-muted-foreground">{language === 'ko' ? '관리형 데이터베이스' : language === 'en' ? 'Managed Database' : '管理型データベース'}</p>
                   </div>
                 </div>
               </>
@@ -161,7 +165,7 @@ const Step3AWSSetup = ({
             <div className="flex items-center gap-3 p-3 rounded-lg bg-success/10 border border-success/20">
               <Globe className="h-5 w-5 text-success" />
               <div className="flex-1">
-                <p className="font-medium text-sm">사용자</p>
+                <p className="font-medium text-sm">{language === 'ko' ? '사용자' : language === 'en' ? 'Users' : 'ユーザー'}</p>
                 <p className="text-xs text-muted-foreground">{domain || 'your-domain.com'}</p>
               </div>
             </div>

@@ -2,12 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { mockDeploymentHistory } from "@/utils/mockData";
 import { CheckCircle2, XCircle, GitBranch } from "lucide-react";
+import { useLanguage } from "@/lib/LanguageContext";
+import { t } from "@/lib/i18n";
 
 const DeploymentHistory = () => {
+  const { language } = useLanguage();
+  
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">배포 히스토리</CardTitle>
+        <CardTitle className="text-lg">{t(language, 'deploymentHistory')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -40,7 +44,7 @@ const DeploymentHistory = () => {
                     variant={deployment.status === 'success' ? 'default' : 'destructive'}
                     className="text-xs"
                   >
-                    {deployment.status === 'success' ? '성공' : '실패'}
+                    {deployment.status === 'success' ? t(language, 'success') : t(language, 'failed')}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground truncate">

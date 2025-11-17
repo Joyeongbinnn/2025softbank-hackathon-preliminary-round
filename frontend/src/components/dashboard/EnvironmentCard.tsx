@@ -5,6 +5,8 @@ import { Environment } from "@/utils/mockData";
 import { RefreshCw, FileText, ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/lib/LanguageContext";
+import { t } from "@/lib/i18n";
 
 interface EnvironmentCardProps {
   environment: Environment;
@@ -12,6 +14,7 @@ interface EnvironmentCardProps {
 
 const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   
   const getStatusConfig = () => {
     switch (environment.status) {
@@ -20,7 +23,7 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
           icon: CheckCircle2,
           color: 'text-success',
           bgColor: 'bg-success/10',
-          label: '정상',
+          label: t(language, 'success'),
           badgeVariant: 'default' as const,
         };
       case 'deploying':
@@ -28,7 +31,7 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
           icon: Loader2,
           color: 'text-warning',
           bgColor: 'bg-warning/10',
-          label: '배포 중',
+          label: t(language, 'running'),
           badgeVariant: 'secondary' as const,
         };
       case 'failed':
@@ -36,7 +39,7 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
           icon: XCircle,
           color: 'text-destructive',
           bgColor: 'bg-destructive/10',
-          label: '실패',
+          label: t(language, 'failed'),
           badgeVariant: 'destructive' as const,
         };
       default:
@@ -44,7 +47,7 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
           icon: CheckCircle2,
           color: 'text-muted-foreground',
           bgColor: 'bg-muted',
-          label: '대기',
+          label: language === 'ko' ? '대기' : language === 'en' ? 'Waiting' : '待機中',
           badgeVariant: 'outline' as const,
         };
     }
@@ -58,13 +61,13 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
     if (diffInMinutes < 60) {
-      return `${diffInMinutes}분 전`;
+      return language === 'ko' ? `${diffInMinutes}분 전` : language === 'en' ? `${diffInMinutes} minutes ago` : `${diffInMinutes}分前`;
     }
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) {
-      return `${diffInHours}시간 전`;
+      return language === 'ko' ? `${diffInHours}시간 전` : language === 'en' ? `${diffInHours} hours ago` : `${diffInHours}時間前`;
     }
-    return `${Math.floor(diffInHours / 24)}일 전`;
+    return language === 'ko' ? `${Math.floor(diffInHours / 24)}일 전` : language === 'en' ? `${Math.floor(diffInHours / 24)} days ago` : `${Math.floor(diffInHours / 24)}日前`;
   };
   
   return (
@@ -86,15 +89,15 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
         
         <div className="space-y-2 text-sm mb-4">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">마지막 배포</span>
+            <span className="text-muted-foreground">{t(language, 'lastDeployment')}</span>
             <span className="font-medium">{formatDate(environment.lastDeployment)}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">커밋</span>
+            <span className="text-muted-foreground">{t(language, 'commit')}</span>
             <code className="text-xs bg-muted px-2 py-1 rounded">{environment.commitHash}</code>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">브랜치</span>
+            <span className="text-muted-foreground">{t(language, 'branch')}</span>
             <span className="font-medium">{environment.branch}</span>
           </div>
           <div className="text-xs text-muted-foreground mt-2 truncate">
@@ -105,7 +108,7 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="flex-1">
             <RefreshCw className="h-3 w-3 mr-1" />
-            다시 배포
+            {t(language, 'redeploy')}
           </Button>
           <Button
             size="sm"
@@ -114,7 +117,7 @@ const EnvironmentCard = ({ environment }: EnvironmentCardProps) => {
             onClick={() => navigate('/pipeline')}
           >
             <FileText className="h-3 w-3 mr-1" />
-            로그 보기
+            {t(language, 'viewLogs')}
           </Button>
           <Button size="sm" variant="outline">
             <ExternalLink className="h-3 w-3" />
