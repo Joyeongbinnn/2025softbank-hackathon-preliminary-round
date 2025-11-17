@@ -59,8 +59,7 @@ services:
       - ./jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/bin/docker
-      # docker compose 플러그인까지 필요하면 아래도 마운트(호스트 경로 확인 필요)
-      # - /usr/lib/docker/cli-plugins:/usr/lib/docker/cli-plugins
+      - /usr/lib/docker/cli-plugins:/usr/lib/docker/cli-plugins
     networks:
       - yoitang-net
     restart: unless-stopped
