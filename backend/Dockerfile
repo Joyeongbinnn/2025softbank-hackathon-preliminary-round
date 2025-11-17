@@ -23,4 +23,7 @@ ENV DJANGO_SETTINGS_MODULE=config.settings
 
 EXPOSE 8080
 
+# Run the production server
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "4"]
+
 CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8080"]
