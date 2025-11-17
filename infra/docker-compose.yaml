@@ -5,9 +5,9 @@ services:
     image: postgres:16
     container_name: yoitang-postgres
     environment:
-      POSTGRES_USER: yoitang
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-yoitang-pass}
-      POSTGRES_DB: yoitang
+      POSTGRES_USER: y
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: 
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
@@ -22,11 +22,11 @@ services:
       - ./backend.env
     environment:
       # DB 연결정보 (backend.env 에서 override 가능)
-      DB_HOST: yoitang-postgres
-      DB_PORT: 5432
-      DB_NAME: yoitang
-      DB_USER: yoitang
-      DB_PASSWORD: ${DB_PASSWORD:-yoitang-pass}
+      DB_HOST: 
+      DB_PORT: 
+      DB_NAME: 
+      DB_USER: 
+      DB_PASSWORD: 
     depends_on:
       - db
     ports:
