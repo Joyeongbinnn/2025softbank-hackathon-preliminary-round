@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import type { ReactNode } from 'react'
 
 export const metadata: Metadata = {
-  title: 'yoitang - 원클릭 자동 배포 플랫폼',
+  title: 'yoitang - 원클릭 자동 배포',
   icons: {
     icon: '/favicon.ico',        // 브라우저 탭 아이콘
   },
