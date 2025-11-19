@@ -1,13 +1,11 @@
-version: "3.9"
-
 services:
   db:
     image: postgres:16
     container_name: yoitang-postgres
     environment:
-      POSTGRES_USER: yoitang
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-yoitang-pass}
-      POSTGRES_DB: yoitang
+      POSTGRES_USER: 
+      POSTGRES_PASSWORD: 
+      POSTGRES_DB: 
     volumes:
       - db_data:/var/lib/postgresql/data
     networks:
@@ -22,11 +20,11 @@ services:
       - ./backend.env
     environment:
       # DB 연결정보 (backend.env 에서 override 가능)
-      DB_HOST: yoitang-postgres
-      DB_PORT: 5432
-      DB_NAME: yoitang
-      DB_USER: yoitang
-      DB_PASSWORD: ${DB_PASSWORD:-yoitang-pass}
+      DB_HOST: 
+      DB_PORT: 
+      DB_NAME: 
+      DB_USER: 
+      DB_PASSWORD: 
     depends_on:
       - db
     ports:
@@ -48,18 +46,18 @@ services:
     restart: unless-stopped
 
   jenkins:
-    image: jenkins/jenkins:lts-jdk17
+    build: ./jenkins
     container_name: yoitang-jenkins
     user: root
     environment:
       JENKINS_OPTS: "--httpPort=8081 --prefix=/jenkins"
+      TZ: Asia/Seoul
     ports:
       - "8081:8081"
     volumes:
       - ./jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock
-      - /usr/bin/docker:/usr/bin/docker
-      - /usr/libexec/docker/cli-plugins:/usr/libexec/docker/cli-plugins
+      - $HOME/.aws:/var/jenkins_home/.aws:ro
     networks:
       - yoitang-net
     restart: unless-stopped
