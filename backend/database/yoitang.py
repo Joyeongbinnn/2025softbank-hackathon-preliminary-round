@@ -5,10 +5,10 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 
 load_dotenv()
 
-host = os.getenv("YOITANG_HOST")
+host = os.getenv("DB_HOST")
 username = os.getenv("DB_USER")
 password = os.getenv("DB_PASSWORD")
-database = os.getenv("YOITANG_DB")
+database = os.getenv("DB_NAME")
 
 DB_URL = f'postgresql://{username}:{password}@{host}/{database}'
 
