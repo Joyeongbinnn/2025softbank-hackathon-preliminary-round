@@ -178,19 +178,22 @@ EOF
           echo "[Kaniko] HOST PWD=$(pwd)"
           ls -al
 
-            docker run --rm \
-            -v $(pwd):/workspace \
+          docker run --rm \
+            -v "$(pwd)":/workspace \
             -v ${DOCKER_CONFIG}:/kaniko/.docker \
+            -w /workspace \
             ${KANIKO_IMAGE} \
+              --context /workspace \
+              --dockerfile Dockerfile \
               --destination ${IMAGE_FULL} \
               --single-snapshot \
               --cache=true \
               --cache-repo=${ECR_REGISTRY}/${ECR_REPO}-cache
-
           '''
         }
       }
     }
+
 
 
     // 6) Trivy 이미지 스캔
