@@ -2,13 +2,12 @@ pipeline {
   agent any
 
   environment {
-    //=== 공통 환경변수 (docker-compose로 주입) ===
+    // docker-compose 에서 주입한 값 사용
     AWS_REGION     = "${env.AWS_REGION}"
     ECR_ACCOUNT_ID = "${env.ECR_ACCOUNT_ID}"
     ECR_REGISTRY   = "${ECR_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
     ECR_REPO       = "yoitang-frontend"
 
-    //# Kaniko 이미지 & Docker config
     KANIKO_IMAGE   = "gcr.io/kaniko-project/executor:v1.24.0"
     DOCKER_CONFIG  = "/var/jenkins_home/.docker"
 
@@ -17,34 +16,60 @@ pipeline {
   }
 
   parameters {
-    string(name: 'PREFIX', description: '도메인 prefix (예: team1)', trim: true)
-    string(name: 'GIT_REPO', description: '프론트엔드 Git 저장소 URL', trim: true)
-    string(name: 'BRANCH', defaultValue: 'main', description: '배포 브랜치', trim: true)
+    string(
+      name: 'PREFIX',
+      description: '도메인 prefix (예: team1)',
+      trim: true
+    )
+    string(
+      name: 'GIT_REPO',
+      description: '프론트엔드 Git 저장소 URL',
+      trim: true
+    )
+    string(
+      name: 'BRANCH',
+      defaultValue: 'master',
+      description: '배포 브랜치',
+      trim: true
+    )
 
-    booleanParam(name: 'USE_REPO_DOCKERFILE', defaultValue: false,
-      description: '체크 시 레포 안의 Dockerfile 그대로 사용')
+    booleanParam(
+      name: 'USE_REPO_DOCKERFILE',
+      defaultValue: false,
+      description: '체크 시 레포 안의 frontend/Dockerfile 그대로 사용'
+    )
 
-    choice(name: 'FRONTEND_STACK', choices: ['react-vite'],
-      description: '프론트엔드 스택 (현재는 React(Vite)만 지원)')
+    choice(
+      name: 'FRONTEND_STACK',
+      choices: ['react-vite'],
+      description: '프론트엔드 스택 (현재는 React(Vite)만 지원)'
+    )
   }
 
   stages {
 
+    // 1) 팀 레포를 app/ 아래에 체크아웃
     stage('Checkout') {
       steps {
         dir('app') {
-          deleteDir()  // 이전 팀 코드 삭제
+          deleteDir()
           echo "[Checkout] ${params.GIT_REPO} (${params.BRANCH})"
           git branch: params.BRANCH, url: params.GIT_REPO
-          sh 'ls -R'
+          sh 'echo "[Checkout] app 디렉터리 구조"; ls -R'
         }
       }
     }
 
+    // 2) frontend/ 기준으로 npm ci + eslint
     stage('Install deps & ESLint') {
       steps {
-        dir('app') {
+        dir('app/frontend') {
           sh '''
+          if [ ! -d . ]; then
+            echo "[ERROR] frontend 디렉터리가 없습니다. 레포 구조를 확인하세요."
+            exit 1
+          fi
+
           if [ -f package.json ]; then
             echo "[Node] package.json 발견 → npm ci 실행"
             npm ci
@@ -56,13 +81,16 @@ pipeline {
               echo "[ESLint] eslint 설정 없음 → 스킵"
             fi
           else
-            echo "[Node] package.json 없음 → Node 단계 스킵"
+            echo "[ERROR] frontend 디렉터리에 package.json 이 없습니다."
+            ls -al
+            exit 1
           fi
           '''
         }
       }
     }
 
+    // 3) ECR 로그인 (Kaniko에서 쓸 도커 config)
     stage('ECR Login (Kaniko용)') {
       steps {
         sh '''
@@ -75,14 +103,15 @@ pipeline {
       }
     }
 
+    // 4) 플랫폼이 관리하는 Dockerfile 생성 (frontend/ 안에)
     stage('Generate Dockerfile (managed)') {
       when {
         expression { return !params.USE_REPO_DOCKERFILE }
       }
       steps {
-        dir('app') {
+        dir('app/frontend') {
           sh '''
-          echo "[Dockerfile] 플랫폼 관리 Dockerfile 생성 시작"
+          echo "[Dockerfile] 플랫폼 관리 Dockerfile 생성 시작 (frontend 기준)"
 
           case "${FRONTEND_STACK}" in
             react-vite)
@@ -109,12 +138,14 @@ EOF
           esac
 
           echo "[Dockerfile] 생성 완료:"
+          pwd
           ls -al Dockerfile
           '''
         }
       }
     }
 
+    // 5) Kaniko로 빌드 & 푸시 (context = app/frontend)
     stage('Build & Push with Kaniko') {
       steps {
         script {
@@ -122,27 +153,35 @@ EOF
           env.IMAGE_FULL = "${ECR_REGISTRY}/${ECR_REPO}:${tag}"
         }
 
-        sh '''
-        if [ ! -f app/Dockerfile ]; then
-          echo "[ERROR] app 디렉터리에 Dockerfile 이 없습니다."
-          exit 1
-        fi
+        dir('app/frontend') {
+          sh '''
+          if [ ! -f Dockerfile ]; then
+            echo "[ERROR] frontend 디렉터리에 Dockerfile 이 없습니다."
+            pwd
+            ls -al
+            exit 1
+          fi
 
-        echo "[Kaniko] 이미지 빌드 & 푸시 → ${IMAGE_FULL}"
-        docker run --rm \
-          -v ${WORKSPACE}/app:/workspace \
-          -v ${DOCKER_CONFIG}:/kaniko/.docker \
-          ${KANIKO_IMAGE} \
-            --dockerfile Dockerfile \
-            --context /workspace \
-            --destination ${IMAGE_FULL} \
-            --single-snapshot \
-            --cache=true \
-            --cache-repo=${ECR_REGISTRY}/${ECR_REPO}-cache
-        '''
+          echo "[Kaniko] 이미지 빌드 & 푸시 → ${IMAGE_FULL}"
+          echo "[Kaniko] HOST PWD=$(pwd)"
+          ls -al
+
+          docker run --rm \
+            -v $(pwd):/workspace \
+            -v ${DOCKER_CONFIG}:/kaniko/.docker \
+            ${KANIKO_IMAGE} \
+              --context /workspace \
+              --dockerfile Dockerfile \
+              --destination ${IMAGE_FULL} \
+              --single-snapshot \
+              --cache=true \
+              --cache-repo=${ECR_REGISTRY}/${ECR_REPO}-cache
+          '''
+        }
       }
     }
 
+    // 6) Trivy 이미지 스캔
     stage('Trivy Scan') {
       steps {
         sh '''
@@ -158,6 +197,7 @@ EOF
       }
     }
 
+    // 7) K8s 매니페스트 생성 & 배포
     stage('Generate K8s Manifests & Deploy') {
       steps {
         sh '''
