@@ -182,13 +182,15 @@ EOF
             -v $(pwd):/workspace \
             -v ${DOCKER_CONFIG}:/kaniko/.docker \
             -w /workspace \
+            docker run --rm \
+            -v $(pwd):/workspace \
+            -v ${DOCKER_CONFIG}:/kaniko/.docker \
             ${KANIKO_IMAGE} \
-              --context . \
-              --dockerfile Dockerfile \
               --destination ${IMAGE_FULL} \
               --single-snapshot \
               --cache=true \
               --cache-repo=${ECR_REGISTRY}/${ECR_REPO}-cache
+
           '''
         }
       }
