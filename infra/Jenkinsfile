@@ -178,9 +178,12 @@ EOF
           echo "[Kaniko] HOST PWD=$(pwd)"
           ls -al
 
+          # 호스트 기준 Jenkins 홈 경로 (docker inspect .Source에서 가져온 값)
+          HOST_JENKINS_HOME="/home/ubuntu/2025softbank-hackathon/infra/jenkins_home"
+
           docker run --rm \
-            -v "$(pwd)":/workspace \
-            -v ${DOCKER_CONFIG}:/kaniko/.docker \
+            -v ${HOST_JENKINS_HOME}/workspace/yoitang-autodeploy/app/frontend:/workspace \
+            -v ${HOST_JENKINS_HOME}/.docker:/kaniko/.docker \
             -w /workspace \
             ${KANIKO_IMAGE} \
               --context /workspace \
@@ -193,6 +196,7 @@ EOF
         }
       }
     }
+
 
 
 
