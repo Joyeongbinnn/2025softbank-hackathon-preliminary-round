@@ -21,7 +21,7 @@ services:
     env_file:
       - ./backend.env
 #    environment:
-#      # DB 연결정보 (backend.env 에서 override 가능)
+#      DB 연결정보 (backend.env 에서 override 가능)
 #      DB_HOST: 
 #      DB_PORT: 
 #      DB_NAME: 

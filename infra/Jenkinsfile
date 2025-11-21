@@ -16,9 +16,36 @@ pipeline {
   }
 
   parameters {
-    string(name: 'PREFIX',   description: '도메인 prefix (예: team1)', trim: true)
-    string(name: 'GIT_REPO', description: '프론트엔드 Git 저장소 URL', trim: true)
-    string(name: 'BRANCH',   defaultValue: 'main', description: '배포 브랜치', trim: true)
+    string(
+      name: 'PREFIX',
+      description: '도메인 prefix (예: team1)',
+      trim: true
+    )
+    string(
+      name: 'GIT_REPO',
+      description: '프론트엔드 Git 저장소 URL',
+      trim: true
+    )
+    string(
+      name: 'BRANCH',
+      defaultValue: 'main',
+      description: '배포 브랜치',
+      trim: true
+    )
+
+    // UI 의 "레포의 Dockerfile 사용" 체크박스와 매핑
+    booleanParam(
+      name: 'USE_REPO_DOCKERFILE',
+      defaultValue: false,
+      description: '체크 시 레포 안의 Dockerfile 그대로 사용'
+    )
+
+    // UI 의 프론트엔드 스택 선택과 매핑 (일단 React(Vite)만)
+    choice(
+      name: 'FRONTEND_STACK',
+      choices: ['react-vite'],
+      description: '프론트엔드 스택 (현재는 React(Vite)만 지원)'
+    )
   }
 
   stages {
@@ -55,12 +82,55 @@ pipeline {
         sh '''
         mkdir -p ${DOCKER_CONFIG}
         echo "[ECR] docker login 시작"
+
         aws ecr get-login-password --region ${AWS_REGION} \
           | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+        '''
+      }
+    }
 
-        # docker login 결과를 Kaniko가 읽을 수 있게 복사
-        mkdir -p /root/.docker
-        cp -f /root/.docker/config.json ${DOCKER_CONFIG}/config.json || true
+    stage('Generate Dockerfile (managed)') {
+      when {
+        expression { return !params.USE_REPO_DOCKERFILE }
+      }
+      steps {
+        sh '''
+        echo "[Dockerfile] 플랫폼 관리 Dockerfile 생성 시작"
+
+        case "${FRONTEND_STACK}" in
+          react-vite)
+            cat > Dockerfile << 'EOF'
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# 의존성 설치
+COPY package*.json ./
+RUN npm ci
+
+# 소스 복사 및 빌드
+COPY . .
+RUN npm run build
+
+# --- 정적 파일 Nginx 에서 서빙 ---
+FROM nginx:1.27-alpine
+
+# Vite 기준: 빌드 결과 dist
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+EOF
+            ;;
+
+          *)
+            echo "[ERROR] 지원하지 않는 FRONTEND_STACK: ${FRONTEND_STACK}"
+            exit 1
+            ;;
+        esac
+
+        echo "[Dockerfile] 생성 완료:"
+        ls -al Dockerfile
         '''
       }
     }
@@ -73,6 +143,12 @@ pipeline {
         }
 
         sh '''
+        if [ ! -f Dockerfile ]; then
+          echo "[ERROR] Dockerfile 이 없습니다."
+          echo "자동배포를 사용하려면 Dockerfile을 제공하거나 플랫폼 Dockerfile 옵션을 사용해야 합니다."
+          exit 1
+        fi
+
         echo "[Kaniko] 이미지 빌드 & 푸시 → ${IMAGE_FULL}"
 
         docker run --rm \
@@ -113,76 +189,76 @@ pipeline {
         mkdir -p k8s/${PREFIX}
 
         cat <<EOF > k8s/${PREFIX}/namespace.yaml
-        apiVersion: v1
-        kind: Namespace
-        metadata:
-          name: ${PREFIX}
-        EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${PREFIX}
+EOF
 
         cat <<EOF > k8s/${PREFIX}/deployment.yaml
-        apiVersion: apps/v1
-        kind: Deployment
-        metadata:
-          name: ${PREFIX}-frontend-deploy
-          namespace: ${PREFIX}
-        spec:
-          replicas: 1
-          selector:
-            matchLabels:
-              app: ${PREFIX}-frontend
-          template:
-            metadata:
-              labels:
-                app: ${PREFIX}-frontend
-            spec:
-              containers:
-              - name: frontend
-                image: ${IMAGE_FULL}
-                ports:
-                - containerPort: 80
-        EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ${PREFIX}-frontend-deploy
+  namespace: ${PREFIX}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ${PREFIX}-frontend
+  template:
+    metadata:
+      labels:
+        app: ${PREFIX}-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: ${IMAGE_FULL}
+        ports:
+        - containerPort: 80
+EOF
 
         cat <<EOF > k8s/${PREFIX}/service.yaml
-        apiVersion: v1
-        kind: Service
-        metadata:
-          name: ${PREFIX}-frontend-svc
-          namespace: ${PREFIX}
-        spec:
-          selector:
-            app: ${PREFIX}-frontend
-          ports:
-          - port: 80
-            targetPort: 80
-        EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: ${PREFIX}-frontend-svc
+  namespace: ${PREFIX}
+spec:
+  selector:
+    app: ${PREFIX}-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+EOF
 
         cat <<EOF > k8s/${PREFIX}/ingress.yaml
-        apiVersion: networking.k8s.io/v1
-        kind: Ingress
-        metadata:
-          name: ${PREFIX}-ing
-          namespace: ${PREFIX}
-          annotations:
-            nginx.ingress.kubernetes.io/ssl-redirect: "true"
-            cert-manager.io/cluster-issuer: "letsencrypt-prod"
-        spec:
-          ingressClassName: nginx
-          tls:
-          - hosts:
-            - ${PREFIX}.yoitang.cloud
-            secretName: ${PREFIX}-tls
-          rules:
-          - host: ${PREFIX}.yoitang.cloud
-            http:
-              paths:
-              - path: /
-                pathType: Prefix
-                backend:
-                  service:
-                    name: ${PREFIX}-frontend-svc
-                    port:
-                      number: 80
-        EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${PREFIX}-ing
+  namespace: ${PREFIX}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - ${PREFIX}.yoitang.cloud
+    secretName: ${PREFIX}-tls
+  rules:
+  - host: ${PREFIX}.yoitang.cloud
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: ${PREFIX}-frontend-svc
+            port:
+              number: 80
+EOF
 
         echo "[kubectl] apply 시작"
         kubectl apply -f k8s/${PREFIX}/
