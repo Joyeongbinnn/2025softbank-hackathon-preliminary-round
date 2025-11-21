@@ -113,7 +113,41 @@ pipeline {
       }
     }
 
-    // 4) 플랫폼이 관리하는 Dockerfile 생성 (frontend/ 안에)
+    // 4) ECR 리포지토리 존재 보장 (없으면 생성)
+    stage('Ensure ECR Repositories') {
+      steps {
+        sh '''
+        echo "[ECR] 리포지토리 존재 여부 확인 및 없으면 생성"
+
+        # 메인 이미지 리포
+        if ! aws ecr describe-repositories \
+              --repository-names ${ECR_REPO} \
+              --region ${AWS_REGION} >/dev/null 2>&1; then
+          echo "[ECR] ${ECR_REPO} 리포지토리가 없어 생성합니다."
+          aws ecr create-repository \
+            --repository-name ${ECR_REPO} \
+            --region ${AWS_REGION}
+        else
+          echo "[ECR] ${ECR_REPO} 리포지토리 이미 존재"
+        fi
+
+        # 캐시용 리포
+        CACHE_REPO_NAME="${ECR_REPO}-cache"
+        if ! aws ecr describe-repositories \
+              --repository-names ${CACHE_REPO_NAME} \
+              --region ${AWS_REGION} >/dev/null 2>&1; then
+          echo "[ECR] ${CACHE_REPO_NAME} 리포지토리가 없어 생성합니다."
+          aws ecr create-repository \
+            --repository-name ${CACHE_REPO_NAME} \
+            --region ${AWS_REGION}
+        else
+          echo "[ECR] ${CACHE_REPO_NAME} 리포지토리 이미 존재"
+        fi
+        '''
+      }
+    }
+
+    // 5) 플랫폼이 관리하는 Dockerfile 생성 (frontend/ 안에)
     stage('Generate Dockerfile (managed)') {
       when {
         expression { return !params.USE_REPO_DOCKERFILE }
@@ -155,7 +189,7 @@ EOF
       }
     }
 
-    // 5) Kaniko로 빌드 & 푸시 (context = app/frontend)
+    // 6) Kaniko로 빌드 & 푸시 (context = app/frontend)
     stage('Build & Push with Kaniko') {
       steps {
         script {
@@ -197,10 +231,7 @@ EOF
       }
     }
 
-
-
-
-    // 6) Trivy 이미지 스캔
+    // 7) Trivy 이미지 스캔
     stage('Trivy Scan') {
       steps {
         sh '''
@@ -216,7 +247,7 @@ EOF
       }
     }
 
-    // 7) K8s 매니페스트 생성 & 배포
+    // 8) K8s 매니페스트 생성 & 배포
     stage('Generate K8s Manifests & Deploy') {
       steps {
         sh '''
