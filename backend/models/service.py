@@ -8,7 +8,6 @@ class Service(Base):
     service_id = Column(BigInteger, primary_key=True, autoincrement=True, nullable=False)
     user_id = Column(BigInteger, ForeignKey("users.user_id"), nullable=False)
     name = Column(String(100), nullable=False)
-    namespace = Column(String(50), nullable=False)
     domain = Column(String(200), nullable=True)
     git_repo = Column(Text, nullable=False)
     created_date = Column(DateTime, server_default=func.now(), nullable=False)
