@@ -1,6 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Depends
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import datetime
 from sqlalchemy.orm import Session
-from typing import List
 from schemas.deploy import DeployRequest, DeployResponse
 from core.jenkins_client import JenkinsClient
 from crud.deploy import get_deploy, get_deploys_by_user_id
@@ -64,3 +66,17 @@ async def get_single_deploy(deploy_id: int, db: Session = Depends(get_db)):
 async def get_user_deploys(user_id: int, db: Session = Depends(get_db)):
     deploys = get_deploys_by_user_id(db, user_id)
     return deploys
+
+class DeployLog(BaseModel):
+    stage: str
+    message: str
+    prefix: str
+    build_number: int
+    deploy_id: Optional[str] = None  # 선택적으로 사용 가능
+
+@router.post("/log/receive", summary="Jenkins로부터 배포 로그 수신")
+async def receive_deploy_log(log: DeployLog):
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    deploy_id = log.deploy_id if log.deploy_id else "None"
+    print(f"[{timestamp}] 📦 Deploy {deploy_id} | Stage: {log.stage} | {log.message}")
+    return {"ok": True}
