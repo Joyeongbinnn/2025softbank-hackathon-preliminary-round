@@ -64,3 +64,11 @@ async def get_single_deploy(deploy_id: int, db: Session = Depends(get_db)):
 async def get_user_deploys(user_id: int, db: Session = Depends(get_db)):
     deploys = get_deploys_by_user_id(db, user_id)
     return deploys
+
+@router.post("/log/receive", summary="Jenkins로부터 배포 로그 수신")
+async def receive_deploy_log(log: dict):
+    deploy_id = log.get("deploy_id")
+    stage = log.get("stage")
+    message = log.get("message")
+    print(f"📦 Deploy {deploy_id} | Stage: {stage} | Log: {message}")
+    return {"ok": True}
