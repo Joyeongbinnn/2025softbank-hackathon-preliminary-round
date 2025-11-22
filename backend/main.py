@@ -1,6 +1,8 @@
 import uvicorn
 from fastapi import FastAPI
 from api import main
+from app.api import jenkins_logs
+
 from starlette.middleware.cors import CORSMiddleware
 
 app = FastAPI(root_path="/api")
