@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from schemas.deploy import DeployRequest, DeployCreate, DeployResponse
 from core.jenkins_client import JenkinsClient
-from crud.deploy import create_deploy, get_deploy, get_deploys_by_user, get_latest_deploy_by_service
+from crud.deploy import create_deploy, get_deploy, get_deploys_by_service, get_latest_deploy_by_service
 from database.yoitang import get_db
 
 router = APIRouter()
@@ -80,10 +80,16 @@ async def get_service_latest_deploy(service_id: int, db: Session = Depends(get_d
         )
     return deploy
 
-# 유저의 최근 4번의 배포 이력 조회
-@router.get("/user/{user_id}", response_model=List[DeployResponse], summary="유저의 최근 4번의 배포 이력 조회")
-async def get_user_deploys(user_id: int, db: Session = Depends(get_db)):
-    deploys = get_deploys_by_user(db, user_id)
+# 서비스의 최근 4번의 배포 이력 조회
+@router.get("/service/{service_id}", response_model=List[DeployResponse], summary="서비스의 최근 4번의 배포 이력 조회")
+async def get_service_deploys(service_id: int, db: Session = Depends(get_db)):
+    deploys = get_deploys_by_service(db, service_id)
+
+    if not deploys:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="해당 서비스의 배포 이력이 존재하지 않습니다."
+        )
     return deploys
 
 class DeployLog(BaseModel):

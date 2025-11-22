@@ -15,5 +15,5 @@ def get_deploy(db: Session, deploy_id: int) -> Deploy:
 def get_latest_deploy_by_service(db: Session, service_id: int) -> Deploy:
     return db.query(Deploy).filter(Deploy.service_id == service_id).order_by(Deploy.created_date.desc()).first()
 
-def get_deploys_by_user(db: Session, user_id: int, limit: int = 4):
-    return db.query(Deploy).filter(Deploy.user_id == user_id).order_by(Deploy.created_date.desc()).limit(limit).all()
+def get_deploys_by_service(db: Session, service_id: int, limit: int = 4):
+    return db.query(Deploy).filter(Deploy.service_id == service_id).order_by(Deploy.created_date.desc()).limit(limit).all()
