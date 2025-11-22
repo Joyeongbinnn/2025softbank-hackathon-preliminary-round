@@ -53,9 +53,11 @@ pipeline {
       steps {
         dir('app') {
           deleteDir()
+          echo "[BUILD_LOG_START][Checkout]"
           echo "[Checkout] ${params.GIT_REPO} (${params.BRANCH})"
           git branch: params.BRANCH, url: params.GIT_REPO
           sh 'echo "[Checkout] app 디렉터리 구조"; ls -R'
+          echo "[BUILD_LOG_END][Checkout]"
         }
       }
     }
@@ -64,6 +66,7 @@ pipeline {
     stage('Install deps & ESLint') {
       steps {
         dir('app/frontend') {
+          echo "[BUILD_LOG_START][Install]"
           sh '''
           if [ ! -d . ]; then
             echo "[ERROR] frontend 디렉터리가 없습니다. 레포 구조를 확인하세요."
@@ -96,6 +99,7 @@ pipeline {
             exit 1
           fi
           '''
+          echo "[BUILD_LOG_END][Install]"
         }
       }
     }
@@ -103,6 +107,7 @@ pipeline {
     // 3) ECR 로그인 (Kaniko에서 쓸 도커 config)
     stage('ECR Login (Kaniko용)') {
       steps {
+        echo "[BUILD_LOG_START][ECR Login]"
         sh '''
         mkdir -p ${DOCKER_CONFIG}
         echo "[ECR] docker login 시작"
@@ -110,12 +115,14 @@ pipeline {
         aws ecr get-login-password --region ${AWS_REGION} \
           | docker login --username AWS --password-stdin ${ECR_REGISTRY}
         '''
+        echo "[BUILD_LOG_END][ECR Login]"
       }
     }
 
     // 4) ECR 리포지토리 존재 보장 (없으면 생성)
     stage('Ensure ECR Repositories') {
       steps {
+        echo "[BUILD_LOG_START][ECR Repo Check]"
         sh '''
         echo "[ECR] 리포지토리 존재 여부 확인 및 없으면 생성"
 
@@ -132,6 +139,7 @@ pipeline {
         fi
 
         '''
+        echo "[BUILD_LOG_END][ECR Repo Check]"
       }
     }
 
@@ -142,6 +150,7 @@ pipeline {
       }
       steps {
         dir('app/frontend') {
+          echo "[BUILD_LOG_START][Dockerfile]"
           sh '''
           echo "[Dockerfile] 플랫폼 관리 Dockerfile 생성 시작 (frontend 기준)"
 
@@ -173,6 +182,7 @@ EOF
           pwd
           ls -al Dockerfile
           '''
+          echo "[BUILD_LOG_END][Dockerfile]"
         }
       }
     }
@@ -186,6 +196,7 @@ EOF
         }
 
         dir('app/frontend') {
+          echo "[BUILD_LOG_START][Kaniko]"
           sh '''
           set -e
 
@@ -213,6 +224,7 @@ EOF
               --destination ${IMAGE_FULL} \
               --single-snapshot \
           '''
+          echo "[BUILD_LOG_END][Kaniko]"
         }
       }
     }
@@ -236,6 +248,7 @@ EOF
     // 8) K8s 매니페스트 생성 & 배포
     stage('Generate K8s Manifests & Deploy') {
       steps {
+        echo "[DEPLOY_LOG_START][K8s Deploy]"
         sh '''
         set -e
         echo "[K8s] 매니페스트 생성 시작 → prefix=${PREFIX}"
@@ -327,6 +340,7 @@ EOF
 
         kubectl get pods -n ${PREFIX}
         '''
+        echo "[DEPLOY_LOG_END][K8s Deploy]"
       }
     }
   }
