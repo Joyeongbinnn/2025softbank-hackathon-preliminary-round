@@ -1,13 +1,18 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+import asyncio
+from fastapi import APIRouter, HTTPException, status, Depends   
 from sqlalchemy.orm import Session
 from database.yoitang import get_db
 from crud.service import create_service, get_service, get_services_by_user, get_services_count_by_user, get_success_services_count_by_user, get_today_user_services_count, get_user_service_success_rate
-from schemas.service import ServiceCreate, ServiceResponse
+from crud.deploy import create_deploy
+from schemas.service import ServiceCreate, ServiceResponse, ServiceDeployInfo
+from schemas.deploy import DeployCreate, DeployRequest
+from core.git_util import get_latest_commit
+from core.jenkins_trigger import trigger_jenkins_build
 
 router = APIRouter()
 
-# 서비스 생성(미완)
-@router.post("/", response_model=ServiceResponse, summary="DB에 새 서비스 생성(미완)")
+# 서비스 생성
+@router.post("/", response_model=ServiceResponse, summary="DB에 새 서비스 생성")
 async def create_new_service(service_data: ServiceCreate, db: Session = Depends(get_db)):
     return create_service(db, service_data)
 
@@ -53,3 +58,39 @@ async def get_today_user_services_count_by_user_id(user_id: int, db: Session = D
 async def get_user_service_success_rate_by_user_id(user_id: int, db: Session = Depends(get_db)):
     success_rate = get_user_service_success_rate(db, user_id)
     return success_rate
+
+# 새 서비스 자동 배포
+@router.post("/auto_deploy", summary="새 서비스 자동 배포")
+async def create_auto_deploy(auto_deploy_data: ServiceDeployInfo, db: Session = Depends(get_db)):
+    service_create = ServiceCreate(
+        user_id=auto_deploy_data.user_id,
+        name=auto_deploy_data.name,
+        domain=auto_deploy_data.domain,
+        git_repo=auto_deploy_data.git_repo,
+    )
+    service = create_service(db, service_create)
+
+    commit_id, commit_message = get_latest_commit(auto_deploy_data.git_repo, auto_deploy_data.git_branch)
+
+    deploy_create = DeployCreate(
+        service_id=service.service_id,
+        git_branch=auto_deploy_data.git_branch,
+        commit_id=commit_id,
+        commit_message=commit_message,
+    )
+    deploy = create_deploy(db, deploy_create)
+
+    deploy_req = DeployRequest(
+        prefix=service.domain,
+        git_repo=service.git_repo,
+        branch=deploy.git_branch,
+        use_repo_dockerfile=False,
+        frontend_stack="react-vite"
+    )
+    asyncio.create_task(trigger_jenkins_build(deploy.deploy_id, deploy_req))
+
+    return {
+        "service": service,
+        "deploy": deploy,
+        "message": "Service and deploy created, Jenkins build triggered asynchronously."
+    }

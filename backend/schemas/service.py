@@ -19,3 +19,10 @@ class ServiceResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ServiceDeployInfo(BaseModel):
+    user_id: int
+    name: str
+    domain: str
+    git_repo: str
+    git_branch: str
