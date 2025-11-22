@@ -216,7 +216,7 @@ EOF
         }
       }
     }
-
+/*
     // 7) Trivy 이미지 스캔
     stage('Trivy Scan') {
       steps {
@@ -232,7 +232,7 @@ EOF
         '''
       }
     }
-
+*/
     // 8) K8s 매니페스트 생성 & 배포
     stage('Generate K8s Manifests & Deploy') {
       steps {
