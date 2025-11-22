@@ -1,4 +1,5 @@
 from sqlalchemy import Column, BigInteger, Text, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database.yoitang import Base
 
@@ -13,3 +14,4 @@ class Log(Base):
     created_date = Column(DateTime, server_default=func.now(), nullable=False)
     updated_date = Column(DateTime, onupdate=func.now(), nullable=True)
 
+    deploy = relationship("Deploy", back_populates="logs")
