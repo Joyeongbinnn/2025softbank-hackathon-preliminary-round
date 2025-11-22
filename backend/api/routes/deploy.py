@@ -10,8 +10,8 @@ from database.yoitang import get_db
 
 router = APIRouter()
 
-@router.post("/", summary="새 배포 요청(미완)")
-@router.post("", summary="새 배포 요청(미완)")
+#@router.post("/", summary="새 배포 요청")
+#@router.post("", summary="새 배포 요청")
 async def deploy(req: DeployRequest):
     """
     유저 입력:
@@ -52,7 +52,7 @@ async def deploy(req: DeployRequest):
     }
 
 # 배포 생성
-@router.post("/", response_model=DeployResponse, summary="새 배포 생성(미완)")
+@router.post("/", response_model=DeployResponse, summary="새 배포 생성")
 async def create_new_deploy(deploy_data: DeployCreate, db: Session = Depends(get_db)):
     return create_deploy(db, deploy_data)
 

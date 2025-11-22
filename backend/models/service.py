@@ -6,7 +6,7 @@ class Service(Base):
     __tablename__ = "services"
 
     service_id = Column(BigInteger, primary_key=True, autoincrement=True, nullable=False)
-    user_id = Column(BigInteger, ForeignKey("users.user_id"), nullable=False)
+    user_id = Column(BigInteger, nullable=False)
     name = Column(String(100), nullable=False)
     domain = Column(String(200), nullable=False)
     git_repo = Column(Text, nullable=False)
