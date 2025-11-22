@@ -195,7 +195,8 @@ export const api = {
   },
 
   async postDeploy(payload: any): Promise<any> {
-    const res = await fetch('/api/deploy', {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || `${window.location.origin}/api`
+    const res = await fetch(`${apiUrl}/deploy`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
