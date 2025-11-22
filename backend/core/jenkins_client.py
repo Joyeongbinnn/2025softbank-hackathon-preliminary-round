@@ -39,7 +39,7 @@ class JenkinsClient:
             "BRANCH": branch,
             "USE_REPO_DOCKERFILE": str(use_repo_dockerfile).lower(),  # true/False
             "FRONTEND_STACK": frontend_stack,
-        }
+        }   
 
         resp = requests.post(url, auth=HTTPBasicAuth(self.username, self.token), data=data, timeout=10, verify=True)
         if resp.status_code not in (201, 202):

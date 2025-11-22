@@ -10,7 +10,7 @@ import StepIndicator from "@/components/wizard/StepIndicator"
 import Step1BasicInfo from "@/components/wizard/Step1BasicInfo"
 import Step2GitSetup from "@/components/wizard/Step2GitSetup"
 import Step3Summary from "@/components/wizard/Step3Summary"
-import { simulateDeployment } from "@/utils/mockData"
+import api from "@/lib/api"
 
 const NewProject = () => {
   const navigate = useNavigate()
@@ -96,17 +96,36 @@ const NewProject = () => {
       { id: 'deploy' }
     )
 
-    await simulateDeployment(3000)
+    try {
+      const result = await api.postDeploy({
+        prefix: domainPrefix,
+        git_repo: gitUrl,
+        branch: branch,
+        use_repo_dockerfile: useRepoDockerfile,
+        frontend_stack: hasFrontend ? frontendStack : undefined,
+      })
 
-    toast.success(
-      language === 'ko'
-        ? '배포가 시작되었습니다! 🎉'
-        : language === 'en'
-          ? 'Deployment started! 🎉'
-          : 'デプロイが開始されました! 🎉',
-      { id: 'deploy' }
-    )
-    navigate('/dashboard')
+      toast.success(
+        language === 'ko'
+          ? '배포가 시작되었습니다! 🎉'
+          : language === 'en'
+            ? 'Deployment started! 🎉'
+            : 'デプロイが開始されました! 🎉',
+        { id: 'deploy' }
+      )
+      navigate('/dashboard')
+    } catch (error) {
+      toast.error(
+        language === 'ko'
+          ? `배포 실패: ${error instanceof Error ? error.message : '알 수 없는 오류'}`
+          : language === 'en'
+            ? `Deployment failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+            : `デプロイ失敗: ${error instanceof Error ? error.message : '不明なエラー'}`,
+        { id: 'deploy' }
+      )
+    } finally {
+      setIsDeploying(false)
+    }
   }
 
   const renderStep = () => {
