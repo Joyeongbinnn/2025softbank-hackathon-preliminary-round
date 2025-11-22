@@ -8,6 +8,7 @@ class DeployStatus(str, Enum):
     IN_PROGRESS = "IN_PROGRESS"
     SUCCESS = "SUCCESS"
     FAILED = "FAILED"
+    ARCHIVED = "ARCHIVED"
 
 class DeployRequest(BaseModel):
     prefix: str
@@ -30,11 +31,7 @@ class DeployRequest(BaseModel):
 
 class DeployResponse(BaseModel):
     deploy_id: int
-    user_id: int
-    service_name: str
-    namespace: str
-    domain: Optional[str]
-    git_repo: str
+    service_id: int
     git_branch: str
     commit_id: str
     commit_message: str
