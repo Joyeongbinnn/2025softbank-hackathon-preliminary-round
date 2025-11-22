@@ -130,7 +130,6 @@ pipeline {
         else
           echo "[ECR] ${ECR_REPO} 리포지토리 이미 존재"
         fi
-
         '''
       }
     }
@@ -211,12 +210,13 @@ EOF
               --context /workspace \
               --dockerfile Dockerfile \
               --destination ${IMAGE_FULL} \
-              --single-snapshot \
+              --single-snapshot
           '''
         }
       }
     }
-/*
+
+    /*
     // 7) Trivy 이미지 스캔
     stage('Trivy Scan') {
       steps {
@@ -232,7 +232,8 @@ EOF
         '''
       }
     }
-*/
+    */
+
     // 8) K8s 매니페스트 생성 & 배포
     stage('Generate K8s Manifests & Deploy') {
       steps {
@@ -264,6 +265,8 @@ spec:
       labels:
         app: ${PREFIX}-frontend
     spec:
+      imagePullSecrets:
+      - name: ecr
       containers:
       - name: frontend
         image: ${IMAGE_FULL}
