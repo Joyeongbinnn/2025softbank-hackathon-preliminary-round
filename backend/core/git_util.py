@@ -1,4 +1,5 @@
 import requests
+from typing import Optional
 
 def normalize_repo_url(repo_url: str) -> str:
     repo = repo_url.rstrip("/")
@@ -10,11 +11,15 @@ def normalize_repo_url(repo_url: str) -> str:
     name = parts[1]
     return f"{owner}/{name}"
 
-def get_latest_commit(git_repo: str, branch: str):
+def get_latest_commit(git_repo: str, branch: str, git_pat: Optional[str] = None):
     repo = normalize_repo_url(git_repo)
     url = f"https://api.github.com/repos/{repo}/commits?sha={branch}&per_page=1"
     
-    response = requests.get(url)  # Public repo 기준, 토큰 없이도 가능
+    headers = {}
+    if git_pat:
+        headers["Authorization"] = f"token {git_pat}"
+
+    response = requests.get(url, headers=headers)
     response.raise_for_status()
     
     latest_commit = response.json()[0]
