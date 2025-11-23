@@ -11,9 +11,11 @@ import { mockServices, mockDeploymentHistory, calculateDashboardStats, mockDeplo
 import EnvironmentCard from "@/components/dashboard/EnvironmentCard"
 import DeploymentHistory from "@/components/dashboard/DeploymentHistory"
 import SummaryCard from "@/components/dashboard/SummaryCard"
+import { useState } from "react"
 
 const Dashboard = () => {
   const { language } = useLanguage()
+  const [selectedServiceId, setSelectedServiceId] = useState<number>(9)
   
   // TODO: user_id를 실제 사용자 인증에서 가져오도록 수정 필요
   const userId = 1 // 임시로 하드코딩
@@ -99,6 +101,7 @@ const Dashboard = () => {
                     <EnvironmentCard
                       key={service.service_id}
                       serviceInfo={service}
+                      onClick={() => setSelectedServiceId(service.service_id)}
                     />
                   ))
                 )}
@@ -137,7 +140,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Deployment History */}
-            <DeploymentHistory serviceId={1} />
+            <DeploymentHistory serviceId={selectedServiceId} />
           </div>
         </div>
       </div>
