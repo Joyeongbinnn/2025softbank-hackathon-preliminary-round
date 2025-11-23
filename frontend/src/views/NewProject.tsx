@@ -99,14 +99,15 @@ const NewProject = () => {
     )
 
     try {
-      const result = await api.postDeploy({
-        prefix: domainPrefix,
-        git_repo: gitUrl,
-        branch: branch,
-        use_repo_dockerfile: useRepoDockerfile,
-        frontend_stack: hasFrontend ? frontendStack : undefined,
-        git_pat: gitPat || undefined,
+      // TODO: user_id를 실제 사용자 인증에서 가져오도록 수정 필요
+      const userId = 1 // 임시로 하드코딩
 
+      const result = await api.postAutoDeploy({
+        user_id: userId,
+        name: projectName,
+        domain: domainPrefix,
+        git_repo: gitUrl,
+        git_branch: branch,
       })
 
       toast.success(
