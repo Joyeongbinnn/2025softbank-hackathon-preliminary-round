@@ -241,6 +241,30 @@ export const api = {
     return res.json()
   },
 
+  async postAutoDeploy(payload: {
+    user_id: number
+    name: string
+    domain: string
+    git_repo: string
+    git_branch: string
+  }): Promise<any> {
+    const API_BASE = 'https://www.yoitang.cloud/api'
+    const url = `${API_BASE.replace(/\/$/, '')}/service/auto_deploy`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Auto deploy request failed: ${response.status} ${text}`)
+    }
+
+    return response.json()
+  },
+
   // GitHub APIs - Direct calls to GitHub API
   async getRepoInfo(repoUrl: string, pat?: string): Promise<{
     is_private: boolean
@@ -378,6 +402,41 @@ export const api = {
           : new Date(service.updated_date).toISOString())
         : service.created_date,
     }
+  },
+
+  async getServicesByUserId(userId: number): Promise<ServiceInfo[]> {
+    const API_BASE = 'https://www.yoitang.cloud/api'
+    const url = `${API_BASE}/service/user/${userId}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Failed to fetch services: ${response.status} ${text}`)
+    }
+
+    const services = await response.json()
+    // 백엔드에서 datetime을 ISO 문자열로 변환하여 반환하므로 그대로 사용
+    return services.map((service: any) => ({
+      service_id: service.service_id,
+      user_id: service.user_id,
+      name: service.name,
+      domain: service.domain,
+      git_repo: service.git_repo,
+      created_date: typeof service.created_date === 'string' 
+        ? service.created_date 
+        : new Date(service.created_date).toISOString(),
+      updated_date: service.updated_date 
+        ? (typeof service.updated_date === 'string' 
+          ? service.updated_date 
+          : new Date(service.updated_date).toISOString())
+        : service.created_date,
+    }))
   },
 
   // Deployment APIs - Backend integration

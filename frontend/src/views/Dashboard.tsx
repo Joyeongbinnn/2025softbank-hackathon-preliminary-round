@@ -15,12 +15,12 @@ import SummaryCard from "@/components/dashboard/SummaryCard"
 const Dashboard = () => {
   const { language } = useLanguage()
   
-  // TODO: service_id를 실제 사용자 인증에서 가져오도록 수정 필요
-  const serviceId = 1 // 임시로 하드코딩
+  // TODO: user_id를 실제 사용자 인증에서 가져오도록 수정 필요
+  const userId = 1 // 임시로 하드코딩
   
-  const { data: service, isLoading, isError, error } = useQuery({
-    queryKey: ['service', serviceId],
-    queryFn: () => api.getServicesByServiceId(serviceId),
+  const { data: services, isLoading, isError, error } = useQuery({
+    queryKey: ['services', userId],
+    queryFn: () => api.getServicesByUserId(userId),
   })
   
   const dashboardStats = calculateDashboardStats(mockServices)
@@ -94,13 +94,15 @@ const Dashboard = () => {
                     </div>
                   </div>
                 )}
-                {service && (
-                  <EnvironmentCard
-                    key={service.service_id}
-                    serviceInfo={service}
-                  />
+                {services && services.length > 0 && (
+                  services.map((service) => (
+                    <EnvironmentCard
+                      key={service.service_id}
+                      serviceInfo={service}
+                    />
+                  ))
                 )}
-                {!service && !isLoading && !isError && (
+                {services && services.length === 0 && !isLoading && !isError && (
                   <div className="col-span-2 flex items-center justify-center py-12">
                     <p className="text-muted-foreground">
                       {language === 'ko' ? '등록된 서비스가 없습니다.' : language === 'en' ? 'No service found.' : '登録されたサービスがありません。'}
