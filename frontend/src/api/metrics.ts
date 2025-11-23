@@ -1,12 +1,27 @@
-const API_BASE = (import.meta.env?.VITE_API_BASE as string | undefined)?.replace(/\/$/, "") ?? "https://www.yoitang.cloud"
+// src/api/metrics.ts
+
+// Next.js 환경변수 기반 API BASE 설정
+const getApiBase = (): string => {
+  const fromEnv = process.env.NEXT_PUBLIC_API_BASE
+
+  const base =
+    (typeof fromEnv === "string" && fromEnv.length > 0
+      ? fromEnv
+      : "https://www.yoitang.cloud")
+
+  // 끝에 / 있으면 제거
+  return base.replace(/\/$/, "")
+}
+
+const API_BASE = getApiBase()
 const METRICS_BASE = `${API_BASE}/api/metrics/namespaces`
 
 const extractErrorMessage = async (res: Response) => {
   try {
     const data = await res.clone().json()
     if (typeof data === "string") return data
-    if (typeof data?.detail === "string") return data.detail
-    if (typeof data?.message === "string") return data.message
+    if (typeof (data as any)?.detail === "string") return (data as any).detail
+    if (typeof (data as any)?.message === "string") return (data as any).message
     if (data) return JSON.stringify(data)
   } catch {
     try {
@@ -70,7 +85,9 @@ export interface NamespaceTopWorkloadsResponse {
 
 const buildQuery = (params: Record<string, string | number>) => {
   const search = new URLSearchParams()
-  Object.entries(params).forEach(([key, value]) => search.append(key, String(value)))
+  Object.entries(params).forEach(([key, value]) =>
+    search.append(key, String(value)),
+  )
   return `?${search.toString()}`
 }
 
@@ -80,21 +97,27 @@ export const getNamespaceResourceUsage = async (
   stepSec = 60,
 ) => {
   const res = await fetch(
-    `${METRICS_BASE}/${encodeURIComponent(namespace)}/resource-usage${buildQuery({
-      minutes,
-      step_sec: stepSec,
-    })}`,
+    `${METRICS_BASE}/${encodeURIComponent(namespace)}/resource-usage${buildQuery(
+      {
+        minutes,
+        step_sec: stepSec,
+      },
+    )}`,
   )
   return handleResponse<NamespaceResourceUsageResponse>(res)
 }
 
 export const getNamespaceCostSummary = async (namespace: string) => {
-  const res = await fetch(`${METRICS_BASE}/${encodeURIComponent(namespace)}/cost-summary`)
+  const res = await fetch(
+    `${METRICS_BASE}/${encodeURIComponent(namespace)}/cost-summary`,
+  )
   return handleResponse<NamespaceCostSummaryResponse>(res)
 }
 
 export const getNamespaceHealth = async (namespace: string) => {
-  const res = await fetch(`${METRICS_BASE}/${encodeURIComponent(namespace)}/health`)
+  const res = await fetch(
+    `${METRICS_BASE}/${encodeURIComponent(namespace)}/health`,
+  )
   return handleResponse<NamespaceHealthResponse>(res)
 }
 
@@ -104,7 +127,9 @@ export const getNamespaceTopWorkloads = async (
   limit = 5,
 ) => {
   const res = await fetch(
-    `${METRICS_BASE}/${encodeURIComponent(namespace)}/top-workloads${buildQuery({
+    `${METRICS_BASE}/${encodeURIComponent(
+      namespace,
+    )}/top-workloads${buildQuery({
       window,
       limit,
     })}`,
