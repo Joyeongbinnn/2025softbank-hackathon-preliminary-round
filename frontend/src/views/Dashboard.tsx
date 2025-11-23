@@ -97,13 +97,19 @@ const Dashboard = () => {
                   </div>
                 )}
                 {services && services.length > 0 && (
-                  services.map((service) => (
-                    <EnvironmentCard
-                      key={service.service_id}
-                      serviceInfo={service}
-                      onClick={() => setSelectedServiceId(service.service_id)}
-                    />
-                  ))
+                  [...services]
+                    .sort((a, b) => {
+                      const dateA = a.updated_date ? new Date(a.updated_date).getTime() : 0;
+                      const dateB = b.updated_date ? new Date(b.updated_date).getTime() : 0;
+                      return dateA - dateB; // 오름차순 정렬
+                    })
+                    .map((service) => (
+                      <EnvironmentCard
+                        key={service.service_id}
+                        serviceInfo={service}
+                        onClick={() => setSelectedServiceId(service.service_id)}
+                      />
+                    ))
                 )}
                 {services && services.length === 0 && !isLoading && !isError && (
                   <div className="col-span-2 flex items-center justify-center py-12">
