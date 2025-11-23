@@ -127,7 +127,7 @@ const Dashboard = () => {
                     .sort((a, b) => {
                       const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
                       const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
-                      return dateA - dateB; // 오름차순 정렬
+                      return dateB - dateA; // 오름차순 정렬
                     })
                     .map((service) => (
                       <EnvironmentCard

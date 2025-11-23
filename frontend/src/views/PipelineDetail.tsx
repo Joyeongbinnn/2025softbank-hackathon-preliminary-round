@@ -6,11 +6,49 @@ import { t } from "@/lib/i18n";
 import StageIndicator from "@/components/pipeline/StageIndicator";
 import LogViewer from "@/components/pipeline/LogViewer";
 import { mockPipelineStages } from "@/utils/mockData";
+import { useState } from "react";
+
+type StatusType = 'working' | 'success' | 'fail';
 
 const PipelineDetail = () => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const { deployId } = useParams<{ deployId: string }>();
+  const [status, setStatus] = useState<StatusType>('working');
+
+  const handleImageClick = () => {
+    setStatus((prev) => {
+      if (prev === 'working') return 'success';
+      if (prev === 'success') return 'fail';
+      return 'working';
+    });
+  };
+
+  const getStatusImage = () => {
+    switch (status) {
+      case 'working':
+        return '/images/working.gif';
+      case 'success':
+        return '/images/success.gif';
+      case 'fail':
+        return '/images/fail.gif';
+      default:
+        return '/images/working.gif';
+    }
+  };
+
+  const getStatusText = () => {
+    switch (status) {
+      case 'working':
+        return t(language, 'running');
+      case 'success':
+        return t(language, 'success');
+      case 'fail':
+        return t(language, 'failed');
+      default:
+        return t(language, 'running');
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -33,13 +71,15 @@ const PipelineDetail = () => {
         
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold">현재 상태</h2>
+            <h2 className="text-xl font-semibold">{t(language, 'currentStatus')}</h2>
             <div>
               <img 
-                src="/images/working.gif" 
-                alt="Working" 
-                className="w-full max-w-md mx-auto mb-6"
+                src={getStatusImage()} 
+                alt={getStatusText()} 
+                className="w-full max-w-md mx-auto mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={handleImageClick}
               />
+              <p className="text-center text-lg font-medium">{getStatusText()}</p>
             </div>
             <h2 className="text-xl font-semibold">{t(language, 'deployment')}</h2>
             <StageIndicator stages={mockPipelineStages} />
