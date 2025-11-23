@@ -7,7 +7,6 @@ import { useLanguage } from "@/lib/LanguageContext"
 import { t } from "@/lib/i18n"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import { mockServices, mockDeploymentHistory, calculateDashboardStats, mockDeployments } from "@/utils/mockData"
 import EnvironmentCard from "@/components/dashboard/EnvironmentCard"
 import DeploymentHistory from "@/components/dashboard/DeploymentHistory"
 import SummaryCard from "@/components/dashboard/SummaryCard"
@@ -24,8 +23,35 @@ const Dashboard = () => {
     queryKey: ['services', userId],
     queryFn: () => api.getServicesByUserId(userId),
   })
-  
-  const dashboardStats = calculateDashboardStats(mockServices)
+
+  const { data: totalServices = 0 } = useQuery({
+    queryKey: ['serviceCount', userId],
+    queryFn: () => api.getServiceCountByUserId(userId),
+  })
+
+  const { data: successRate = 0 } = useQuery({
+    queryKey: ['successRate', userId],
+    queryFn: () => api.getServiceSuccessRateByUserId(userId),
+  })
+
+  const { data: todayCount = 0 } = useQuery({
+    queryKey: ['todayCount', userId],
+    queryFn: () => api.getServiceTodayCountByUserId(userId),
+  })
+
+  const { data: activeCount = 0 } = useQuery({
+    queryKey: ['activeCount', userId],
+    queryFn: () => api.getServiceActiveCountByUserId(userId),
+  })
+
+  const dashboardStats = {
+    totalServices,
+    successfulDeploymentsToday: 0, // API에서 제공하지 않으므로 0으로 설정
+    failedDeploymentsToday: 0, // API에서 제공하지 않으므로 0으로 설정
+    deploymentSuccessRate: successRate,
+    activeEnvironments: activeCount,
+    totalDeployments: todayCount,
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">

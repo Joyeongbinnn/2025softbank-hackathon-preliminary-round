@@ -33,7 +33,7 @@ const SummaryCard = ({ stats }: SummaryCardProps) => {
     {
       key: 'todaysDeployments',
       icon: Zap,
-      value: stats.successfulDeploymentsToday + stats.failedDeploymentsToday,
+      value: stats.totalDeployments,
       label: t(language, 'todaysDeployments'),
       color: 'from-accent/20 to-accent/10',
       iconColor: 'text-accent',
