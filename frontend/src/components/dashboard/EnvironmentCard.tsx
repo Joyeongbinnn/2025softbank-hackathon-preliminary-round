@@ -1,9 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { RefreshCw, FileText, ExternalLink, CheckCircle2, XCircle, Loader2 } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useLanguage } from "@/lib/LanguageContext"
 import { t } from "@/lib/i18n"
 import { api } from "@/lib/api"
@@ -12,12 +10,23 @@ import type { Environment, ServiceInfo } from "@/types"
 
 interface EnvironmentCardProps {
   serviceInfo: ServiceInfo
+  onClick?: () => void
 }
 
-const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
+const EnvironmentCard = ({ serviceInfo, onClick }: EnvironmentCardProps) => {
   const navigate = useNavigate();
   const { language } = useLanguage();
   const [isLoading, setIsLoading] = useState(false);
+  const prefix = serviceInfo.prefix ?? serviceInfo.name ?? serviceInfo.domain ?? "default";
+  const namespace = serviceInfo.namespace ?? serviceInfo.domain ?? prefix;
+  const metricsParams = new URLSearchParams({
+    serviceId: String(serviceInfo.service_id),
+    namespace,
+  });
+  if (prefix) {
+    metricsParams.set("prefix", prefix);
+  }
+  const metricsHref = `/dashboard/metrics?${metricsParams.toString()}`;
   
   // const getStatusConfig = () => {
   //   switch (environment.status) {
@@ -59,10 +68,32 @@ const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
   // const statusConfig = getStatusConfig();
   // const StatusIcon = statusConfig.icon;
   
-  const formatDate = (date?: Date) => {
+  const formatDate = (date?: Date | string) => {
     if (!date) return language === 'ko' ? 'N/A' : 'N/A'
-    const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+    
+    // 백엔드에서 오는 날짜 문자열이 시간대 정보 없이 오는 경우 UTC로 가정
+    let dateObj: Date
+    if (typeof date === 'string') {
+      // 시간대 정보가 없으면 UTC로 가정 (Z 추가)
+      const dateStr = date.includes('Z') || date.includes('+') || date.includes('-', 10) 
+        ? date 
+        : date + 'Z'
+      dateObj = new Date(dateStr)
+    } else {
+      dateObj = date
+    }
+    
+    // 한국 시간(KST, UTC+9) 기준으로 현재 시간과 입력 날짜를 변환
+    const getKSTTime = (d: Date): number => {
+      // UTC 시간을 구하고 한국 시간 오프셋(UTC+9)을 적용
+      const utcTime = d.getTime() + (d.getTimezoneOffset() * 60 * 1000)
+      return utcTime + (9 * 60 * 60 * 1000) // UTC+9 = 9시간 추가
+    }
+    
+    const nowKST = getKSTTime(new Date())
+    const dateKST = getKSTTime(dateObj)
+    
+    const diffInMinutes = Math.floor((nowKST - dateKST) / (1000 * 60))
 
     if (diffInMinutes < 60) {
       return language === 'ko' ? `${diffInMinutes}분 전` : language === 'en' ? `${diffInMinutes} minutes ago` : `${diffInMinutes}分前`
@@ -79,7 +110,10 @@ const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
   }
 
   return (
-    <Card className="transition-all hover:shadow-lg hover:-translate-y-1">
+    <Card 
+      className="transition-all hover:shadow-lg hover:-translate-y-1 cursor-pointer"
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -104,7 +138,7 @@ const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
         <div className="space-y-2 text-sm mb-4">
           <div className="flex justify-between">
             <span className="text-muted-foreground">{t(language, 'lastDeployment')}</span>
-            <span className="font-medium">{formatDate(new Date(serviceInfo.updated_date))}</span>
+            <span className="font-medium">{formatDate(serviceInfo.updated_date)}</span>
           </div>
           {/* {environment.commitHash && (
             <div className="flex justify-between">
@@ -121,7 +155,7 @@ const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
             <div className="text-xs text-muted-foreground truncate">
               Domain:{' '}
               <a
-                href={serviceInfo.domain.startsWith('http') ? serviceInfo.domain : `https://${serviceInfo.domain}`}
+                href={serviceInfo.domain.startsWith('http') ? serviceInfo.domain : `https://${serviceInfo.domain}.yoitang.cloud`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary hover:underline"
@@ -145,7 +179,7 @@ const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
           )}
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
           <Button size="sm" variant="outline" className="flex-1">
             <RefreshCw className="h-3 w-3 mr-1" />
             {t(language, 'redeploy')}
@@ -155,7 +189,8 @@ const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
             variant="outline"
             className="flex-1"
             disabled={isLoading}
-            onClick={async () => {
+            onClick={async (e) => {
+              e.stopPropagation();
               try {
                 setIsLoading(true);
                 const latestDeploy = await api.getLatestDeployByServiceId(serviceInfo.service_id);
@@ -185,9 +220,12 @@ const EnvironmentCard = ({ serviceInfo }: EnvironmentCardProps) => {
               </>
             )}
           </Button>
-          {/* <Button size="sm" variant="outline">
-            <ExternalLink className="h-3 w-3" />
-          </Button> */}
+          <Button size="sm" variant="outline" className="flex-1" asChild>
+            <Link to={metricsHref} className="flex items-center justify-center gap-1">
+              <ExternalLink className="h-3 w-3" />
+              {language === 'ko' ? '메트릭' : language === 'ja' ? 'メトリクス' : 'Metrics'}
+            </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>

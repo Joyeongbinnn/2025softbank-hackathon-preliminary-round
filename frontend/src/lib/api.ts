@@ -401,6 +401,8 @@ export const api = {
           ? service.updated_date 
           : new Date(service.updated_date).toISOString())
         : service.created_date,
+      prefix: service.prefix || service.name || service.domain,
+      namespace: service.namespace || service.domain || service.name,
     }
   },
 
@@ -436,6 +438,8 @@ export const api = {
           ? service.updated_date 
           : new Date(service.updated_date).toISOString())
         : service.created_date,
+      prefix: service.prefix || service.name || service.domain,
+      namespace: service.namespace || service.domain || service.name,
     }))
   },
 
@@ -486,8 +490,8 @@ export const api = {
       git_branch: deployment.git_branch,
       commit_id: deployment.commit_id,
       commit_message: deployment.commit_message,
-      // API는 "SUCCESS"를 반환하지만 컴포넌트는 "success"를 기대하므로 소문자로 변환
-      status: deployment.status?.toLowerCase() || 'unknown',
+      // Backend DeployStatus enum: IN_PROGRESS, SUCCESS, FAILED, ARCHIVED
+      status: deployment.status || 'UNKNOWN',
       created_date: typeof deployment.created_date === 'string' 
         ? deployment.created_date 
         : new Date(deployment.created_date).toISOString(),
