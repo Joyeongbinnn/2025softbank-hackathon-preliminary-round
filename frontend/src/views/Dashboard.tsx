@@ -14,7 +14,7 @@ import { useState } from "react"
 
 const Dashboard = () => {
   const { language } = useLanguage()
-  const [selectedServiceId, setSelectedServiceId] = useState<number>(9)
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
   
   // TODO: user_id를 실제 사용자 인증에서 가져오도록 수정 필요
   const userId = 1 // 임시로 하드코딩
@@ -125,8 +125,8 @@ const Dashboard = () => {
                 {services && services.length > 0 && (
                   [...services]
                     .sort((a, b) => {
-                      const dateA = a.updated_date ? new Date(a.updated_date).getTime() : 0;
-                      const dateB = b.updated_date ? new Date(b.updated_date).getTime() : 0;
+                      const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
+                      const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
                       return dateA - dateB; // 오름차순 정렬
                     })
                     .map((service) => (
@@ -172,7 +172,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Deployment History */}
-            <DeploymentHistory serviceId={selectedServiceId} />
+            {selectedServiceId && <DeploymentHistory serviceId={selectedServiceId} />}
           </div>
         </div>
       </div>
