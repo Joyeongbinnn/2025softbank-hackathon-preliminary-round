@@ -520,6 +520,87 @@ export const api = {
         : '',
     }))
   },
+
+  // Dashboard Statistics APIs
+  async getServiceCountByUserId(userId: number): Promise<number> {
+    const API_BASE = 'https://www.yoitang.cloud/api'
+    const url = `${API_BASE}/service/user/${userId}/count`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Failed to fetch service count: ${response.status} ${text}`)
+    }
+
+    const data = await response.json()
+    return typeof data === 'number' ? data : data.count || 0
+  },
+
+  async getServiceSuccessRateByUserId(userId: number): Promise<number> {
+    const API_BASE = 'https://www.yoitang.cloud/api'
+    const url = `${API_BASE}/service/user/${userId}/success_rate`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Failed to fetch success rate: ${response.status} ${text}`)
+    }
+
+    const data = await response.json()
+    return typeof data === 'number' ? data : data.success_rate || 0
+  },
+
+  async getServiceTodayCountByUserId(userId: number): Promise<number> {
+    const API_BASE = 'https://www.yoitang.cloud/api'
+    const url = `${API_BASE}/service/user/${userId}/today_count`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Failed to fetch today count: ${response.status} ${text}`)
+    }
+
+    const data = await response.json()
+    return typeof data === 'number' ? data : data.today_count || 0
+  },
+
+  async getServiceActiveCountByUserId(userId: number): Promise<number> {
+    const API_BASE = 'https://www.yoitang.cloud/api'
+    const url = `${API_BASE}/service/user/${userId}/active_count`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      throw new Error(`Failed to fetch active count: ${response.status} ${text}`)
+    }
+
+    const data = await response.json()
+    return typeof data === 'number' ? data : data.active_count || 0
+  },
 }
 
 export default api

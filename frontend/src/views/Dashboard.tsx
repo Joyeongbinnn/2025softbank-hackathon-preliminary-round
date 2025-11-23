@@ -7,7 +7,6 @@ import { useLanguage } from "@/lib/LanguageContext"
 import { t } from "@/lib/i18n"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import { mockServices, mockDeploymentHistory, calculateDashboardStats, mockDeployments } from "@/utils/mockData"
 import EnvironmentCard from "@/components/dashboard/EnvironmentCard"
 import DeploymentHistory from "@/components/dashboard/DeploymentHistory"
 import SummaryCard from "@/components/dashboard/SummaryCard"
@@ -15,7 +14,7 @@ import { useState } from "react"
 
 const Dashboard = () => {
   const { language } = useLanguage()
-  const [selectedServiceId, setSelectedServiceId] = useState<number>(9)
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
   
   // TODO: user_id를 실제 사용자 인증에서 가져오도록 수정 필요
   const userId = 1 // 임시로 하드코딩
@@ -24,8 +23,35 @@ const Dashboard = () => {
     queryKey: ['services', userId],
     queryFn: () => api.getServicesByUserId(userId),
   })
-  
-  const dashboardStats = calculateDashboardStats(mockServices)
+
+  const { data: totalServices = 0 } = useQuery({
+    queryKey: ['serviceCount', userId],
+    queryFn: () => api.getServiceCountByUserId(userId),
+  })
+
+  const { data: successRate = 0 } = useQuery({
+    queryKey: ['successRate', userId],
+    queryFn: () => api.getServiceSuccessRateByUserId(userId),
+  })
+
+  const { data: todayCount = 0 } = useQuery({
+    queryKey: ['todayCount', userId],
+    queryFn: () => api.getServiceTodayCountByUserId(userId),
+  })
+
+  const { data: activeCount = 0 } = useQuery({
+    queryKey: ['activeCount', userId],
+    queryFn: () => api.getServiceActiveCountByUserId(userId),
+  })
+
+  const dashboardStats = {
+    totalServices,
+    successfulDeploymentsToday: 0, // API에서 제공하지 않으므로 0으로 설정
+    failedDeploymentsToday: 0, // API에서 제공하지 않으므로 0으로 설정
+    deploymentSuccessRate: successRate,
+    activeEnvironments: activeCount,
+    totalDeployments: todayCount,
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -97,13 +123,19 @@ const Dashboard = () => {
                   </div>
                 )}
                 {services && services.length > 0 && (
-                  services.map((service) => (
-                    <EnvironmentCard
-                      key={service.service_id}
-                      serviceInfo={service}
-                      onClick={() => setSelectedServiceId(service.service_id)}
-                    />
-                  ))
+                  [...services]
+                    .sort((a, b) => {
+                      const dateA = a.created_date ? new Date(a.created_date).getTime() : 0;
+                      const dateB = b.created_date ? new Date(b.created_date).getTime() : 0;
+                      return dateB - dateA; // 오름차순 정렬
+                    })
+                    .map((service) => (
+                      <EnvironmentCard
+                        key={service.service_id}
+                        serviceInfo={service}
+                        onClick={() => setSelectedServiceId(service.service_id)}
+                      />
+                    ))
                 )}
                 {services && services.length === 0 && !isLoading && !isError && (
                   <div className="col-span-2 flex items-center justify-center py-12">
@@ -140,7 +172,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Deployment History */}
-            <DeploymentHistory serviceId={selectedServiceId} />
+            {selectedServiceId && <DeploymentHistory serviceId={selectedServiceId} />}
           </div>
         </div>
       </div>
