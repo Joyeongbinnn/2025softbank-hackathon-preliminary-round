@@ -70,7 +70,7 @@ async def create_auto_deploy(auto_deploy_data: ServiceDeployInfo, db: Session = 
     )
     service = create_service(db, service_create)
 
-    commit_id, commit_message = get_latest_commit(auto_deploy_data.git_repo, auto_deploy_data.git_branch)
+    commit_id, commit_message = get_latest_commit(auto_deploy_data.git_repo, auto_deploy_data.git_branch, auto_deploy_data.git_pat)
 
     deploy_create = DeployCreate(
         service_id=service.service_id,
