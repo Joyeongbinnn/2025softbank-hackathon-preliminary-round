@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from datetime import date
 from models.deploy import Deploy, DeployStatus
 from schemas.deploy import DeployCreate
 
@@ -17,6 +18,13 @@ def get_latest_deploy_by_service(db: Session, service_id: int) -> Deploy:
 
 def get_deploys_by_service(db: Session, service_id: int, limit: int = 4):
     return db.query(Deploy).filter(Deploy.service_id == service_id).order_by(Deploy.created_date.desc()).limit(limit).all()
+
+def get_today_user_deploys_count(db: Session, user_id: int) -> int:
+    today = date.today()
+    return db.query(Deploy).filter(
+        Deploy.user_id == user_id,
+        Deploy.created_date >= today
+    ).count()
 
 def update_deploy_status(db: Session, deploy_id: int, status: str) -> Deploy:
     deploy = db.query(Deploy).filter(Deploy.deploy_id == deploy_id).first()

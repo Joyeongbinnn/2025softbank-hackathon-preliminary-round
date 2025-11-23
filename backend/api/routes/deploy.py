@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from schemas.deploy import DeployRequest, DeployCreate, DeployResponse
 from core.jenkins_client import JenkinsClient
-from crud.deploy import create_deploy, get_deploy, get_deploys_by_service, get_latest_deploy_by_service
+from crud.deploy import create_deploy, get_deploy, get_deploys_by_service, get_latest_deploy_by_service, get_today_user_deploys_count
 from database.yoitang import get_db
 
 router = APIRouter()
@@ -92,16 +92,8 @@ async def get_service_deploys(service_id: int, db: Session = Depends(get_db)):
         )
     return deploys    
 
-class DeployLog(BaseModel):
-    stage: str
-    message: str
-    prefix: str
-    build_number: int
-    deploy_id: Optional[str] = None  # 선택적으로 사용 가능
-
-@router.post("/log/receive", summary="Jenkins로부터 배포 로그 수신(미완)")
-async def receive_deploy_log(log: DeployLog):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    deploy_id = log.deploy_id if log.deploy_id else "None"
-    print(f"[{timestamp}] 📦 Deploy {deploy_id} | Stage: {log.stage} | {log.message}")
-    return {"ok": True}
+# 오늘 생성된 유저의 배포 개수 조회
+@router.get("/user/{user_id}/today_count", response_model=int, summary="오늘 생성된 유저의 배포 개수 조회")
+async def get_today_user_deploys_count_by_user_id(user_id: int, db: Session = Depends(get_db)):
+    count = get_today_user_deploys_count(db, user_id)
+    return count
