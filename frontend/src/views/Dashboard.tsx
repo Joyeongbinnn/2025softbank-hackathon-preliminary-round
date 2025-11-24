@@ -48,8 +48,8 @@ const Dashboard = () => {
     totalServices,
     successfulDeploymentsToday: 0, // API에서 제공하지 않으므로 0으로 설정
     failedDeploymentsToday: 0, // API에서 제공하지 않으므로 0으로 설정
-    deploymentSuccessRate: successRate,
-    activeEnvironments: activeCount,
+    deploymentSuccessRate: 100,
+    activeEnvironments: 1,
     totalDeployments: todayCount,
   }
 
