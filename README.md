@@ -49,9 +49,7 @@
 <p align="center">
   <img src="./docs/images/feature-cards.png" alt="Features" />
 </p>
-<p align="center">
-  <img src="./docs/images/feature-cards2.png" alt="Features" />
-</p>
+
 
 - 🪄 **원클릭 배포**
   - Git URL, 브랜치, PAT, 도메인만 입력하면 배포 파이프라인이 자동 생성됩니다.
