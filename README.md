@@ -143,7 +143,7 @@ Zustand 등 상태 관리
 
 Vite 관련 설정 일부 사용 (개발 편의)
 
-###Backend
+### Backend
 
 FastAPI (Python 3.11)
 
